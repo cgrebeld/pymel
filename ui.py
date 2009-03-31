@@ -770,9 +770,11 @@ def informBox(title, message, ok="Ok"):
     confirmDialog(t=title, m=message, b=["Ok"], db="Ok")
     
     
-def promptForFolder():
+def promptForFolder(title="Folder Browser", message="Browse for Folder", root="/", **kwargs):
     """ Prompt the user for a folder path """
-    return promptForPath(mode=4)
+    kwargs['mode'] = 4 
+    kwargs['an'] = message
+    return promptForPath(**kwargs)
 
 
 def promptForPath(**kwargs):
