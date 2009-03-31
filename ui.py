@@ -468,6 +468,74 @@ class TextScrollList(UI):
         """select all items"""
         numberOfItems = self.getNumberOfItems()
         self.selectIndexedItems(range(1,numberOfItems+1))
+        
+    def getSelectIndexedItem(self):
+        return cmds.textScrollList(self, q=1, selectIndexedItem=True) or []
+
+from UserList import UserList
+
+#from imdUtils.decoration import decorator
+#@decorator
+def refreshing(func):
+    def dec(self, *x, **y):
+        sel = self.getSelected()
+        ret = func(self, *x, **y)
+        self.refresh()
+        self.select(sel)
+        return ret
+    return dec
+    
+class ObjectScrollList(UserList, TextScrollList):
+    
+    def __init__(self, *args, **kwargs):
+        TextScrollList.__init__(self, *args,**kwargs)
+        UserList.__init__(self)
+        self.objectToIndices = {}
+
+        if self.getAllowMultiSelection():
+            self._converter = lambda l: l
+        else:
+            self._converter = lambda l: l and l[0] or None
+
+    objectToString = str
+
+    d = locals()
+    for fn in ['append', 'extend', 'insert', 'pop', 'remove', 'reverse', 'sort',
+               '__setslice__', '__delslice__', '__imul__', '__iadd__']:
+        func = refreshing(getattr(UserList,fn))
+        d[fn] = func
+    del d, func, fn
+
+    #================================================================================
+    
+    def refresh(self):
+        sel = self.getSelected()
+        self.removeAll(1)
+        self.objectToIndices.clear()
+        for i, o in enumerate(self.data):
+            TextScrollList.append(self, self.objectToString(o))
+            self.objectToIndices.setdefault(o,[]).append(i+1)
+        if sel and self.data: self.select(sel)
+        
+    def select(self, objects):
+        if not hasattr(objects,"__iter__"):
+            objects = [objects]
+        indices = [i for o in objects for i in self.objectToIndices.get(o,[])]
+        self.setSelectIndexedItem(indices)
+
+    @property
+    def selectedIndices(self):
+        return [i-1 for i in self.getSelectIndexedItem()]
+
+    def getSelected(self):
+        ret = [self[s] for s in self.selectedIndices]
+        return self._converter(ret)
+
+    def popSelected(self):
+        ret = [self.pop(i) for i in reversed(self.selectedIndices)]
+        ret.reverse()
+        return self._converter(ret)
+
 
 class OptionMenu(UI):
     __metaclass__ = factories.metaNode
@@ -478,12 +546,66 @@ class OptionMenu(UI):
         for item in items:
             menuItem(l = item, parent = self)
             
+    def getSelectIndexedItem(self):
+        return cmds.optionMenu(self, q=1, sl=1)
+    def setSelectIndexedItem(self, i):
+        return cmds.optionMenu(self, e=1, sl=i)
+            
     def clear(self):  
         """ Clear all menu items from this OptionMenu """
         for t in self.getItemListLong() or []:
             cmds.deleteUI(t)
     addItems = addMenuItems
 
+
+class ObjectMenu(UserList, OptionMenu):
+    
+    def __init__(self, *args, **kwargs):
+        OptionMenu.__init__(self, *args,**kwargs)
+        UserList.__init__(self)
+        self.title = None
+        self.objectToIndices = {}
+
+    objectToString = str
+
+    d = locals()
+    for fn in ['append', 'extend', 'insert', 'pop', 'remove', 'reverse', 'sort',
+               '__setslice__', '__delslice__', '__imul__', '__iadd__']:
+        func = refreshing(getattr(UserList,fn))
+        d[fn] = func
+    del d, func, fn
+
+    #================================================================================
+
+    def addMenuItems(self, items, title=None):
+        self.data.extend(items)
+        self.title = title
+        self.refresh()
+    
+    def refresh(self):
+        self.clear()
+        offset = 1
+        if self.title:
+            menuItem(l = self.title, en = 0,parent = self)
+            offset += 1
+        self.objectToIndices.clear()
+        for i, o in enumerate(self.data):
+            menuItem(l = self.objectToString(o), parent = self)            
+            self.objectToIndices.setdefault(o,[]).append(i+offset)
+        
+    def select(self, object):
+        if object:
+            self.setSelectIndexedItem(self.objectToIndices[object][-1])
+
+    def getSelected(self):
+        idx = self.getSelectIndexedItem()
+        if idx:
+            return self[idx-1]
+
+    def popSelected(self):
+        ret = self.pop(self.getSelectIndexedItem())
+        self.refresh()
+        return ret
     
 #===============================================================================
 # Provides classes and functions to facilitate UI creation in Maya
