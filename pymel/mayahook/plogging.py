@@ -60,8 +60,6 @@ def getLogConfigFile():
         return configFile
     return getConfigFile()
 
-maya.utils.shellLogger()
-
 #configFile = getLogConfigFile()
 #if sys.version_info >= (2,6):
 #    logging.config.fileConfig(configFile, disable_existing_loggers=0)
