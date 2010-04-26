@@ -3,9 +3,10 @@
 #
 # This module is imported during the startup of Maya in GUI mode.
 #
+import sys
 import maya.app.startup.basic
-
-import maya.app.baseUI, maya.utils, sys
+import maya.app.baseUI
+import maya.utils
 
 # Replace sys.stdin with a GUI version that will request input from the user
 sys.stdin = maya.app.baseUI.StandardInput()
@@ -15,9 +16,8 @@ sys.stdin = maya.app.baseUI.StandardInput()
 sys.stdout = maya.utils.Output()
 sys.stderr = maya.utils.Output( error=1 )
 
-maya.utils.guiLogger()
-    
-# Copyright (C) 1997-2006 Autodesk, Inc., and/or its licensors.
+maya.utils.guiLogHandler()
+# Copyright (C) 1997-2010 Autodesk, Inc., and/or its licensors.
 # All rights reserved.
 #
 # The coded instructions, statements, computer programs, and/or related

@@ -1,6 +1,6 @@
 #import testingutils
 import unittest
-import pymel.mayahook.mayautils
+import pymel.internal.startup
 
 class TestGetMayaVersion(unittest.TestCase):
     

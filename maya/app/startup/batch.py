@@ -1,16 +1,11 @@
 
-#    module: maya.app.startup.batch
-#
-#    This module is imported during the startup of Maya in batch mode after
-#
-
-import sys
+"""
+This module is imported during the startup of Maya in batch mode.
+"""
 import maya.app.startup.basic
-import maya.app.python
-# setup an exception callback
-sys.excepthook = maya.app.python.formatBatchException
 
-# Copyright (C) 1997-2006 Autodesk, Inc., and/or its licensors.
+pass
+# Copyright (C) 1997-2010 Autodesk, Inc., and/or its licensors.
 # All rights reserved.
 #
 # The coded instructions, statements, computer programs, and/or related

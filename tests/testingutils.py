@@ -3,7 +3,7 @@ from StringIO import StringIO
 from unittest import *
 
 import pymel.util
-from pymel.util import warn
+from warnings import warn
 
 TEST_MAIN_FUNC_NAME = "test_main"
 SUITE_FUNC_NAME = "suite"
@@ -409,6 +409,15 @@ class DoctestSuiteFromModule(SuiteFromModule):
             theSuite = TestSuite()
         return theSuite
 
+def setCompare(iter1, iter2):
+    """
+    Compares two groups of objects, returning the sets:
+        onlyIn1, inBoth, onlyIn2
+    """
+    s1 = set(iter1)
+    s2 = set(iter2)
+    intersect = s1 & s2
+    return s1 - intersect, intersect, s2 - intersect
 
 def suite():
     theSuite = TestSuite()

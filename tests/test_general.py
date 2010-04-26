@@ -1,9 +1,9 @@
 import sys, os, inspect, unittest
 #from testingutils import setupUnittestModule
-from pymel.all import *
+from pymel.core import *
 import pymel.core.nodetypes as nodetypes
 #import pymel
-#import pymel.core.factories as _factories
+import pymel.internal.factories as _factories
 #import maya.cmds as cmds
 #
 #
@@ -15,13 +15,216 @@ import pymel.core.nodetypes as nodetypes
 #  
 #    #emptyFunctions = []
 #    
-#    for funcName in _factories.nodeCommandList:
-#        _factories.testNodeCmd( funcName, _factories.cmdlist[funcName], verbose )
+#    for funcName in _internal.nodeCommandList:
+#        _internal.testNodeCmd( funcName, _internal.cmdlist[funcName], verbose )
 #         
 #    print "done"
 #    #print emptyFunctions
 
 
+
+def _makeAllAttrTypes(nodeName):
+    res = cmds.sphere(n=nodeName)
+    cmds.addAttr(ln='short2Attr',at='short2')
+    cmds.addAttr(ln='short2a',p='short2Attr',at='short')
+    cmds.addAttr(ln='short2b',p='short2Attr',at='short')
+    
+    cmds.addAttr(ln='short3Attr',at='short3')
+    cmds.addAttr(ln='short3a',p='short3Attr',at='short')
+    cmds.addAttr(ln='short3b',p='short3Attr',at='short')
+    cmds.addAttr(ln='short3c',p='short3Attr',at='short')
+    
+    cmds.addAttr(ln='long2Attr',at='long2')
+    cmds.addAttr(ln='long2a',p='long2Attr',at='long')
+    cmds.addAttr(ln='long2b',p='long2Attr',at='long')
+    
+    cmds.addAttr(ln='long3Attr',at='long3')
+    cmds.addAttr(ln='long3a',p='long3Attr',at='long')
+    cmds.addAttr(ln='long3b',p='long3Attr',at='long')
+    cmds.addAttr(ln='long3c',p='long3Attr',at='long')
+    
+    cmds.addAttr(ln='float2Attr',at='float2')
+    cmds.addAttr(ln='float2a',p='float2Attr',at="float")
+    cmds.addAttr(ln='float2b',p='float2Attr',at="float")
+    
+    cmds.addAttr(ln='float3Attr',at='float3')
+    cmds.addAttr(ln='float3a',p='float3Attr',at="float")
+    cmds.addAttr(ln='float3b',p='float3Attr',at="float")
+    cmds.addAttr(ln='float3c',p='float3Attr',at="float")
+    
+    cmds.addAttr(ln='double2Attr',at='double2')
+    cmds.addAttr(ln='double2a',p='double2Attr',at='double')
+    cmds.addAttr(ln='double2b',p='double2Attr',at='double')
+    
+    cmds.addAttr(ln='double3Attr',at='double3')
+    cmds.addAttr(ln='double3a',p='double3Attr',at='double')
+    cmds.addAttr(ln='double3b',p='double3Attr',at='double')
+    cmds.addAttr(ln='double3c',p='double3Attr',at='double')
+    
+    cmds.addAttr(ln='Int32ArrayAttr',dt='Int32Array')
+    cmds.addAttr(ln='doubleArrayAttr',dt='doubleArray')
+    cmds.addAttr(ln='pointArrayAttr',dt='pointArray')
+    cmds.addAttr(ln='vectorArrayAttr',dt='vectorArray')
+    
+    cmds.addAttr(ln='stringArrayAttr',dt='stringArray')
+    cmds.addAttr(ln='stringAttr',dt="string")
+    cmds.addAttr(ln='matrixAttr',dt="matrix")
+    
+    # non numeric
+    cmds.addAttr(ln='sphereAttr',dt='sphere')
+    cmds.addAttr(ln='coneAttr',dt='cone')
+    cmds.addAttr(ln='meshAttr',dt='mesh')
+    cmds.addAttr(ln='latticeAttr',dt='lattice')
+    cmds.addAttr(ln='spectrumRGBAttr',dt='spectrumRGB')
+    cmds.addAttr(ln='reflectanceRGBAttr',dt='reflectanceRGB')
+    cmds.addAttr(ln='componentListAttr',dt='componentList')
+    cmds.addAttr(ln='attrAliasAttr',dt='attributeAlias')
+    cmds.addAttr(ln='curveAttr',dt='nurbsCurve')
+    cmds.addAttr(ln='surfaceAttr',dt='nurbsSurface')
+    cmds.addAttr(ln='trimFaceAttr',dt='nurbsTrimface')
+    cmds.addAttr(ln='polyFaceAttr',dt='polyFaces')
+    
+class testCase_mayaSetAttr(unittest.TestCase):
+    """
+    sanity check: make sure we know how to set and get attributes via maya's 
+    setAttr.  this serves mostly to document all the inconsistencies in setAttr
+    so that we can sort them out in our own wrap.  it will also alert us to
+    any changes that Autodesk makes.
+    """
+    
+    def setUp(self):
+        _makeAllAttrTypes('node')
+    
+    def test_short2(self):
+        # compound
+        cmds.setAttr( 'node.short2Attr', 1, 2 )
+        assert cmds.getAttr( 'node.short2Attr' )        == [(1, 2)]
+        
+    def test_short3(self):
+        cmds.setAttr( 'node.short3Attr', 1, 2, 3 )
+        assert cmds.getAttr( 'node.short3Attr' )        == [(1, 2,3)]
+    
+    def test_long2(self):
+        cmds.setAttr( 'node.long2Attr', 1, 2 )
+        assert cmds.getAttr( 'node.long2Attr' )         == [(1, 2)]
+    
+    def test_long3(self):
+        cmds.setAttr( 'node.long3Attr', 1, 2, 3 )
+        assert cmds.getAttr( 'node.long3Attr' )         == [(1, 2,3)]
+        
+    def test_float2(self):
+        cmds.setAttr( 'node.float2Attr', 1, 2 )
+        assert cmds.getAttr( 'node.float2Attr' )        == [(1.0, 2.0)]
+    
+    def test_float(self):
+        cmds.setAttr( 'node.float3Attr', 1, 2, 3 )
+        assert cmds.getAttr( 'node.float3Attr' )        == [(1.0, 2.0, 3.0)]
+        
+    def test_double2(self):
+        cmds.setAttr( 'node.double2Attr', 1, 2 )
+        assert cmds.getAttr( 'node.double2Attr' )       == [(1.0, 2.0)]
+        
+    def test_double3(self):
+        cmds.setAttr( 'node.double3Attr', 1, 2, 3 )
+        assert cmds.getAttr( 'node.double3Attr' )       == [(1.0, 2.0, 3.0)]
+
+    def test_int32Array(self):
+        # array
+        cmds.setAttr( 'node.Int32ArrayAttr', (1, 2, 3, 4), type='Int32Array' )
+        assert cmds.getAttr( 'node.Int32ArrayAttr' ) == [1, 2, 3, 4]
+        
+    def test_doubleArray(self):
+        cmds.setAttr( 'node.doubleArrayAttr', (1, 2, 3, 4), type='doubleArray' )
+        assert cmds.getAttr( 'node.doubleArrayAttr' )   == [1.0, 2.0, 3.0, 4.0]
+    
+    def test_pointArray(self):
+        if versions.current() < versions.v2011:
+            # complex array
+            cmds.setAttr( 'node.pointArrayAttr', 2, (1,2,3,4), "", (1,2,3,4), type='pointArray' )
+            assert cmds.getAttr( 'node.pointArrayAttr' )    == [(1.0, 2.0, 3.0, 4.0), (1.0, 2.0, 3.0, 4.0)]
+        else:
+            cmds.setAttr( 'node.pointArrayAttr', 2, (1,2,3,4), (1,2,3,4), type='pointArray' )
+            assert cmds.getAttr( 'node.pointArrayAttr' )    == [(1.0, 2.0, 3.0, 4.0), (1.0, 2.0, 3.0, 4.0)]
+            
+    def test_vectorArray(self):
+        if versions.current() < versions.v2011:
+            cmds.setAttr( 'node.vectorArrayAttr', 2, (1,2,3), "", (1,2,3), type='vectorArray' )
+            assert cmds.getAttr( 'node.vectorArrayAttr' )   == [1.0, 2.0, 3.0, 1.0, 2.0, 3.0]
+        else:
+            cmds.setAttr( 'node.vectorArrayAttr', 2, (1,2,3), (1,2,3), type='vectorArray' )
+            assert cmds.getAttr( 'node.vectorArrayAttr' )   == [(1.0, 2.0, 3.0), (1.0, 2.0, 3.0)]
+    
+    def test_stringArray(self):
+        # string array
+        cmds.setAttr( 'node.stringArrayAttr', 3, 'one', 'two', 'three', type='stringArray' )
+        assert cmds.getAttr( 'node.stringArrayAttr' )   == [u'one', u'two', u'three'] 
+    
+    def test_string(self):
+        cmds.setAttr( 'node.stringAttr', 'one', type='string' )
+        assert cmds.getAttr( 'node.stringAttr' )        == u'one'
+    
+    if versions.current() >= versions.v2011:
+        def test_matrix(self):
+            # matrix
+            # Fails in versions < 2011
+            cmds.setAttr( 'node.matrixAttr', 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, type='matrix' )
+            assert cmds.getAttr( 'node.matrixAttr' )   == [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0] 
+    
+    def test_sphere(self):
+        # non-numeric: can't get
+        cmds.setAttr( 'node.sphereAttr', 1.0, type='sphere' )
+        #assert cmds.getAttr( 'node.sphereAttr' )        == 1.0
+        
+    def test_cone(self):
+        cmds.setAttr( 'node.coneAttr', 45, 45, type='cone' )
+        #assert cmds.getAttr( 'node.coneAttr' )        == 1.0
+        
+    def test_reflectanceRGB(self):
+        cmds.setAttr( 'node.reflectanceRGBAttr', 1,1,1, type='reflectanceRGB' )
+        #assert cmds.getAttr( 'node.reflectanceRGBAttr' )        == 1.0
+        # TODO : finish non-numeric
+    
+def test_pymel_setAttr():
+
+    _makeAllAttrTypes('node2')
+    for data in [
+        ('short2',  (1,2)),
+        ('short3',  (1,2,3)),
+        ('long2',   (1,2)),
+        ('long3',   (1,2,3)),
+        ('float2',  (1.0,2.0)),
+        ('float3',  (1.0,2.0,3.0)),
+        ('double2', (1.0,2.0)),
+        ('double3', datatypes.Vector(1.0,2.0,3.0), [1,2,3] ),
+        
+        ('Int32Array', [1,2,3,4]),
+        ('doubleArray', [1,2,3,4]),
+        
+        ('vectorArray', [datatypes.Vector([1,2,3]), datatypes.Vector([1,0,0])],
+                        [[1,2,3], [1,0,0]] ),
+        ('pointArray', [datatypes.Point([1,2,3]), datatypes.Point([2,4,6])],
+                        [[1,2,3,1], [2,4,6,1]] ),
+        
+        ('stringArray', ['one', 'two', 'three']),
+        ('string', 'one'),
+        ('matrix', datatypes.Matrix(),
+                        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0] )]:
+        typ = data[0]
+        mainVal = data[1]
+        
+        for i, val in enumerate(data[1:]):
+            def testSetAttr(*args):
+                at = 'node2.' + typ + 'Attr'
+                setAttr(at, val)
+                newval = getAttr(at)
+                assert newval == mainVal, "setAttr %s: returned value %r is not equal to input value %r" % (typ, newval, mainVal)
+            
+            testSetAttr.__name__ = 'test_setAttr_' + typ + '_' + str(i) 
+            testSetAttr.description = testSetAttr.__name__
+            #print typ
+            #testSetAttr()
+            yield testSetAttr,
+            
 class testCase_nodesAndAttributes(unittest.TestCase):
 
     def setUp(self):
@@ -50,20 +253,33 @@ class testCase_nodesAndAttributes(unittest.TestCase):
         
         self.newobjs = []
         
-    def test01_attribute_parent_equality(self):
+        cmds.aliasAttr( 'myalias', self.sphere1.name() + '.scaleX' )
+        
+    def test_attribute_parent_equality(self):
         self.assertEqual( self.sphere2.t.tx.parent(), self.sphere2.t )
         
-    def test02_attribute_duplicate_inequality(self):
+    def test_attribute_duplicate_inequality(self):
         self.assert_( self.sphere1.t != self.sphere2.t )
         
-    def test03_attribute_instance_equality(self):
+    def test_attribute_instance_equality(self):
         self.assertEqual( self.sphere1.t, self.sphere3.t )
     
-    def test04_attribute_cascading(self):
+    def test_attribute_cascading(self):
         self.sphere1.primaryVisibility.set(1)
         shape = self.sphere1.getShape()
         self.assertEqual( self.sphere1.primaryVisibility, shape.primaryVisibility )
+     
+    def test_attribute_aliases(self):
+        self.assert_( isinstance(PyNode(self.sphere1.name() + '.myalias'), Attribute ) )
+        self.assert_( isinstance(self.sphere1.attr('myalias'), Attribute) )
+        res1 = self.sphere1.listAttr(alias=1)
+        res2 = self.sphere1.listAliases()
+        self.assertEqual( res1[0], res2[0][1] )
         
+    def test_pmcmds_objectErrors(self):
+        self.assertRaises( MayaAttributeError, setAttr, 'foo.bar', 0 )
+        self.assertRaises( MayaAttributeError, getAttr, 'foo.bar' )
+        self.assertRaises( MayaNodeError, listConnections, 'foobar' )
         
     def test05_dagNode_addParent(self):
         sphere = polySphere()[0]
@@ -172,9 +388,8 @@ class testCase_nodesAndAttributes(unittest.TestCase):
 
         self.assert_( SCENE.persp.getTranslation( 'world' ) == datatypes.Vector([11.0, 22.0, 33.0]) )
         
-        if mayahook.Version.current > mayahook.Version.v85sp1:
-            undo()
-            self.assert_( SCENE.persp.getTranslation( 'world' ) == datatypes.Vector([10.0, 20.0, 30.0]) )
+        undo()
+        self.assert_( SCENE.persp.getTranslation( 'world' ) == datatypes.Vector([10.0, 20.0, 30.0]) )
 
     def test_transform_scale(self):
 
@@ -185,9 +400,8 @@ class testCase_nodesAndAttributes(unittest.TestCase):
 
         self.assert_( SCENE.persp.getScale() == [10.0, 40.0, 90.0] )
         
-#        if mayahook.Version.current > mayahook.Version.v85sp1:
-#            undo()
-#            self.assert_( SCENE.persp.getScale() == [10.0, 20.0, 30.0] )
+        undo()
+        self.assert_( SCENE.persp.getScale() == [10.0, 20.0, 30.0] )
 
     def test_transform_rotation(self):
         SCENE.persp.setRotation( [10,20,0], 'world')
@@ -196,11 +410,10 @@ class testCase_nodesAndAttributes(unittest.TestCase):
         SCENE.persp.setRotation( [0,90,0], 'world', relative=1)
 
         self.assert_( SCENE.persp.getRotation( 'world' ).isEquivalent( datatypes.EulerRotation([10.0, 110.0, 0.0])) )
-        
-        if mayahook.Version.current > mayahook.Version.v85sp1:
-            undo()
-            self.assert_( SCENE.persp.getRotation( 'world' ).isEquivalent( datatypes.EulerRotation([10.0, 20.0, 00.0])) )
-        
+
+        undo()
+        self.assert_( SCENE.persp.getRotation( 'world' ).isEquivalent( datatypes.EulerRotation([10.0, 20.0, 00.0])) )
+    
     def test_immutability(self):
 
         c1 = polyCube()[0]
@@ -223,7 +436,15 @@ class testCase_nodesAndAttributes(unittest.TestCase):
         self.assert_( attrHash1 == c1.translate.__hash__() )
         self.assert_( attrHash2 == c2.translate.__hash__() )
         
+    def test_pynode_instantiation(self):
+        plug = SCENE.persp.__apimfn__().findPlug('translateX')
+        obj = SCENE.persp.__apimobject__()
+        dag = SCENE.persp.__apimdagpath__()
+        PyNode(obj).name()
+        PyNode(plug).name()
+        PyNode(dag).name()
         
+              
     def tearDown(self):
         newFile(f=1)
         
@@ -455,8 +676,189 @@ class testCase_duplicateShape(unittest.TestCase):
                     self.fail("shapes do not compare equal: %r, %r)" %
                               (origShape, shapeDup))
             self.assertFalse(origShape.isInstanceOf(shapeDup))
+
+class test_PyNodeWraps(unittest.TestCase):
+    def setUp(self):
+        cmds.file(new=1, f=1)
+
+    def assertPyNode(self, obj, nodeType=PyNode):
+        self.assert_(isinstance(obj, nodeType),
+                     '%r was not a %s object' % (obj, nodeType.__name__))
         
-            
+    def assertPyNodes(self, objs, nodeType=PyNode):
+        for obj in objs:
+            self.assertPyNode(obj, nodeType)
+                        
+    def test_addAttr_QParent(self):
+        cmds.polyCube()
+        cmds.addAttr( longName='sampson', numberOfChildren=5, attributeType='compound' )
+        cmds.addAttr( longName='homeboy', attributeType='matrix', parent='sampson' )
+        cmds.addAttr( longName='midge', attributeType='message', parent='sampson' )
+        cmds.addAttr( longName='damien', attributeType='double', parent='sampson' )
+        cmds.addAttr( longName='elizabeth', attributeType='double', parent='sampson' )
+        cmds.addAttr( longName='sweetpea', attributeType='double', parent='sampson' )
+        node = cmds.ls(sl=1)[0]
+        self.assertPyNode(addAttr(node + '.sweetpea', q=1, parent=1), Attribute)
+        
+    def test_skinCluster_QGeometry(self):
+        cube = cmds.polyCube()[0]
+        j1 = cmds.joint(p=(0,0,-1))
+        cmds.joint(p=(0,0,1))
+        skin = skinCluster(cube, j1)[0]
+        self.assertPyNodes(skin.getGeometry(), DependNode)
+        
+    def test_addDynamic(self):
+        # Create an emitter
+        cmds.emitter( pos=(0, 0, 0), type='omni', r=100, sro=0, nuv=0, cye='none', cyi=1, spd=1, srn=0, nsp=1, tsp=0, mxd=0, mnd=0, dx=1, dy=0, dz=0, sp=0 )
+        # Result: emitter1 #
+        
+        # Get the emitter to emit particles
+        cmds.particle()
+        # Result: particle2
+        cmds.connectDynamic( 'particle1', em='emitter1' )
+        
+        # Create a particle to use as the source of the emitter
+        cmds.particle( p=((6.0, 0, 7.0), (6.0, 0, 2.0)), c=1 )
+        # Result: particle2
+        
+        # Use particle2 as a source of the emitter
+        self.assertPyNodes(addDynamic( 'emitter1', 'particle2' ), PyNode)
+
+    def test_addPP(self):
+        cmds.emitter( n='myEmitter1' )
+        cmds.particle( n='myParticle1' )
+        cmds.connectDynamic( 'myParticle1', em='myEmitter1' )
+        cmds.select( 'myParticle1' )
+        cmds.emitter( n='myEmitter2' )
+        cmds.particle( n='myParticle2' )
+        cmds.connectDynamic( 'myParticle2', em='myEmitter2' )
+        self.assertPyNodes(addPP( 'myEmitter2', atr='rate' ))
+    
+    def test_animLayer(self):
+        self.assertEqual(animLayer(q=1, root=1), None)
+        cmds.animLayer("layer1")
+        rootLayer = animLayer(q=1, root=1)
+        self.assertPyNode(rootLayer)
+        self.assertEqual(animLayer(rootLayer, q=1, parent=1), None)
+        self.assertPyNode(animLayer("layer1", q=1, parent=1))
+        self.assertEqual(animLayer("layer1", q=1, children=1), [])
+        self.assertPyNodes(animLayer(rootLayer, q=1, children=1))
+        self.assertEqual(animLayer("layer1", q=1, attribute=1), [])
+        self.assertEqual(animLayer("layer1", q=1,  blendNodes=1), [])
+        cmds.animLayer("layer1", e=1, attribute=('persp.tx', 'persp.ry'))
+        self.assertPyNodes(animLayer("layer1", q=1, attribute=1), Attribute)
+        cmds.select('persp')
+        self.assertPyNodes(animLayer(q=1, bestAnimLayer=1))
+        self.assertEqual(animLayer("layer1", q=1,  animCurves=1), [])
+        cmds.setKeyframe('persp', animLayer='layer1')
+        self.assertPyNodes(animLayer("layer1", q=1,  animCurves=1))
+        self.assertEqual(animLayer('layer1', q=1, bac=1), [])
+        cmds.setKeyframe('persp', animLayer='BaseAnimation')
+        self.assertPyNodes(animLayer('layer1', q=1, bac=1))
+        self.assertPyNodes(animLayer("layer1", q=1,  blendNodes=1))
+        self.assertEqual(animLayer("persp.tz", q=1,  bestLayer=1), None)
+        self.assertPyNode(animLayer("persp.tx", q=1,  bestLayer=1))
+        cmds.select('side')
+        self.assertEqual(animLayer(q=1,  affectedLayers=1), [])
+        cmds.select('persp')
+        self.assertPyNodes(animLayer(q=1,  affectedLayers=1))
+        
+    def test_annotate(self):
+        cmds.sphere( name='mySphere' )
+        self.assertPyNode(annotate( 'mySphere', tx='my annotation text', p=(5, 6, 5) ))
+        
+    def test_arclen(self):
+        circle(name='curve1')
+        self.assertPyNode(arclen('curve1', ch=True))
+        self.assertPyNode(arclen('curve1'), float)
+        
+    def test_arcLengthDimension(self):
+        cmds.curve( d=3, p=((-9.3, 0, 3.2), (-4.2, 0, 5.0), (6.0, 0, 8.6), (2.1, 0, -1.9)), k=(0, 0, 0, 1, 2, 2));
+        self.assertPyNode(arcLengthDimension( 'curveShape1.u[0.5]' ))
+        
+    def test_arrayMapper(self):
+        particle( p=[(0, 0, 0), (3, 5, 6), (5, 6, 7), (9, 9, 9)] )
+        self.assertPyNode(arrayMapper( target='particle1', destAttr='rampPosition', inputV='ageNormalized', type='ramp' ))
+        
+    if not cmds.about(batch=1):
+        
+        def test_art3dPaintCtx(self):
+            polyCube()
+            polyCube()
+            select('pCube1', 'pCube2')
+            from maya.mel import eval as mel
+            mel("Art3dPaintTool")
+            mel("art3dPaintAssignFileTextures color")
+            self.assertPyNodes(art3dPaintCtx('art3dPaintContext', q=1, shn=1))
+            self.assertPyNodes(art3dPaintCtx('art3dPaintContext', q=1, hnm=1))
+        
+        def test_artAttrCtx(self):
+            polyCube()
+            polyCube()
+            select('pCube1', 'pCube2')
+            if not cmds.artAttrCtx('artAttrCtx1', exists=1):
+                cmds.artAttrCtx('artAttrCtx1')
+            cmds.setToolTo('artAttrCtx1')
+            self.assertPyNodes(artAttrCtx('artAttrCtx1', q=1, paintNodeArray=1))
+        
+for cmdName in ('''aimConstraint geometryConstraint normalConstraint
+                   orientConstraint parentConstraint pointConstraint
+                   pointOnPolyConstraint poleVectorConstraint
+                   scaleConstraint tangentConstraint''').split():
+    melCmd = getattr(cmds, cmdName, None)
+    if not melCmd: continue
+    pyCmd = globals()[cmdName]
+    def constraintTest(self):
+        cmds.polyCube(name='cube1')
+        cmds.circle(name='circle1')
+        constr = melCmd( 'circle1', 'cube1')[0]
+        self.assertPyNodes(pyCmd(constr, q=1, targetList=1))
+        self.assertPyNodes(pyCmd(constr, q=1, weightAliasList=1), Attribute)
+        if 'worldUpObject' in _factories.cmdlist[cmdName]['flags']:
+            self.assertEqual(pyCmd(constr, q=1, worldUpObject=1), None)
+            cmds.polySphere(name='sphere1')
+            melCmd(constr, e=1, worldUpType='object', worldUpObject='sphere1')
+            self.assertPyNode(pyCmd(constr, q=1, worldUpObject=1))
+    testName = "test_" + cmdName
+    constraintTest.__name__ = testName
+    setattr(test_PyNodeWraps, testName, constraintTest)
+    
+    # Delete the function from the module level after we're done, so
+    # nosetests won't find the "original" non-method function, and
+    # try to run it as a test!
+    del globals()['constraintTest']
+        
+class test_commands(unittest.TestCase):
+    def setUp(self):
+        cmds.file(new=1, f=1)
+        self.dependNode = cmds.createNode('displayLayer')
+        self.group = cmds.group('persp')
+        
+    def test_duplicate(self):
+        # make sure that we get proper dag nodes, even when the result will contain non-unique names
+        self.assert_( duplicate(self.group) )
+        
+        # ensure it works with depend nodes too
+        self.assert_( duplicate(self.dependNode) )
+        
+class test_plugins(unittest.TestCase):
+    def test01_load(self):
+        loadPlugin('Fur')
+        self.assert_( 'FurGlobals' not in pymel.core.nodetypes.__dict__ )
+        # lazer loader exists
+        self.assert_( 'FurGlobals' in pymel.core.nodetypes.__class__.__dict__ )
+        # after accessing, the lazy loader should generate the class
+        pymel.core.nodetypes.FurGlobals
+        self.assert_( 'FurGlobals' in pymel.core.nodetypes.__dict__ )
+        
+    def test1_unload(self):
+        unloadPlugin('Fur')
+        self.assert_( 'FurGlobals' not in pymel.core.nodetypes.__dict__ )
+        # after accessing, the lazy loader should generate the class
+        self.assertRaises(AttributeError, getattr, pymel.core.nodetypes, 'FurGlobals')
+        self.assert_( 'FurGlobals' not in pymel.core.nodetypes.__dict__ )
+        self.assert_( 'FurGlobals' not in pymel.core.nodetypes.__class__.__dict__ )
+        
 #suite = unittest.TestLoader().loadTestsFromTestCase(testCase_nodesAndAttributes)
 #suite.addTest(unittest.TestLoader().loadTestsFromTestCase(testCase_listHistory))
 #unittest.TextTestRunner(verbosity=2).run(suite)

@@ -4,6 +4,8 @@ try:
 except:
     import pickle
 
+__all__ = ['dump', 'load']
+
 def dump(object, filename, protocol=-1):
     """
     Save an compressed pickle to disk.
@@ -14,9 +16,10 @@ def dump(object, filename, protocol=-1):
     finally:
         file.close()
 
-def load(filename):
+
+def _loads(filename):
     """
-    Load a compressed pickle from disk
+    Load a compressed pickle from disk to an upicklable string
     """
     file = gzip.GzipFile(filename, 'rb')
     try:
@@ -26,7 +29,12 @@ def load(filename):
             if data == "":
                 break
             buffer += data
-        object = pickle.loads(buffer)
-        return object
+        return buffer
     finally:
         file.close()
+
+def load(filename):
+    """
+    Load a compressed pickle from disk
+    """
+    return pickle.loads(_loads(filename))

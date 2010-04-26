@@ -12,7 +12,7 @@ the procedural commands you already know and love are retrofitted to return PyUI
 the way you code ::
 
 
-    from pymel import *
+    from pymel.core import *
     win = window(title="My Window")
     layout = columnLayout()
     chkBox = checkBox(label = "My Checkbox", value=True, parent=layout)
@@ -42,7 +42,7 @@ Function Name as String
 The simplest method of setting up a callback is to pass the name of the callback function as a string. Maya will try to execute this as python code. Here's a simple example::
 
 
-	from pymel import *
+	from pymel.core import *
 
 	def buttonPressed():
 	    print "pressed!"
@@ -81,7 +81,7 @@ Function Object
 
 When using this technique, you pass an actual function object instead of a string. ::
 
-    from pymel import *
+    from pymel.core import *
     
     def buttonPressed():
         print "pressed!"
@@ -110,7 +110,7 @@ Why?! The `button` UI widget, like many others, automatically passes arguments t
 
 		radioButton -changeCommand "myRadButtCB #1";
 		
-	When the callback is executed, the ``#1`` gets replaced with the current state of the radioButton -- 0 or 1.  Unfortunately, when using python callbacks, you can't request which arguments you want, you get them all.
+	When the callback is executed, the ``#1`` gets replaced with the current state of the radioButton: ``0`` or ``1``.  Unfortunately, when using python callbacks, you can't request which arguments you want, you get them all.
 
 So, to make our callback work, we need to modify it to accept the argument that the button ``command`` callback is passing us::
 
@@ -120,13 +120,13 @@ So, to make our callback work, we need to modify it to accept the argument that 
 The tricky part is that different UI elements pass differing numbers of arguments to their callbacks, and some pass none at all.  This is why it is best for your command to use the ``*args`` syntax, like so::
 
     def buttonPressed(*args):
-        print "pressed! here are my arguments %s" % ( args )
+        print "pressed! here are my arguments %s" % ( args, )
         
 The asterisk in front of ``args`` allows the function to accept any quantity of passed arguments. All of the positional arguments to the function are stored in the variable ``args`` (without the ``*``) as a read-only list, known as a tuple. Making it a habit to use this syntax for your callbacks can save you a lot of headache.
 
 Putting it all together::
 
-    from pymel import *
+    from pymel.core import *
     
     def buttonPressed(*args):
         print "pressed!"
@@ -147,9 +147,9 @@ The next technique builds on the last by simplifying the following situations:
 	- You want to pass arguments to your callback function other than those automatically sent by the UI element
 	- You're using a function that someone else wrote and can't add the ``*args`` to it 
 	
-For example, I want to pass our ``buttonPressed`` callback function a name argument.  Here's how we do this using a lambda function::
+For example, I want to pass our ``buttonPressed`` function a name argument.  Here's how we do this using a lambda function::
 
-    from pymel import *
+    from pymel.core import *
     
     def buttonPressed(name):
         print "pressed %s!" % name
@@ -187,11 +187,11 @@ The lambda function serves as a mediator between the UI element and our real cal
 
 In the example above we're using the first of the arguments passed by the button (remember, ``args`` is a tuple, which is like a list) and passing it on to our callback in addition to the name string.  Keep in mind that for this to work our ``buttonPressed`` callback would need to be modified to accept two arguments.
 
-Whew! That was a lot to learn, but unfortunately, this method has a drawback, too. It fails when used in a 'for' loop. 
+Whew! That was a lot to learn, but unfortunately, this method has a drawback, too. It does not work properly when used in a 'for' loop. 
 
 In the following example, we're going to make several buttons. Our intention is that each one will print a different name, but as you will soon see, we won't succeed. ::
 
-	from pymel import *
+	from pymel.core import *
 
 	def buttonPressed(name):
 	    print "pressed %s!" % name
@@ -218,7 +218,7 @@ The Callback object 'wraps' another function, and also stores the parameters to 
 
 Here's an example::
 
-	from pymel import *
+	from pymel.core import *
 
 	def buttonPressed(name):
 	    print "pressed %s!" % name
@@ -252,54 +252,52 @@ The `Callback` class ignores any arguments passed in from the UI element, so you
 Layouts
 ----------------------------------
 
-One major pain in designing GUIs is the placing controls in layouts. 
-Maya provides the formLayout command which lets controls resize and keep their relationship with other controls, however
-the use of this command is somewhat combersome and unintuitive.
-Pymel provides an extended FormLayout class, which handles the details of attaching controls to one another automatically:
+One major pain in designing GUIs is the placing of controls in layouts. 
+Maya provides the formLayout command which lets controls resize and keep their relationship with other controls, however the use of this command is somewhat cumbersome and unintuitive.
+Pymel provides an extended FormLayout class, which handles the details of attaching controls to one another automatically::
 
 
-    >>> win = window(title="My Window")
-    >>> layout = formLayout()
-    >>> for i in range(5):
-    ...     button(label="button %s" % i)
-    >>> win.show()
+    win = window(title="My Window")
+    layout = formLayout()
+    for i in range(5):
+        button(label="button %s" % i)
+    win.show()
 
 
-The 'redistribute' method should now be used to redistributes the children (buttons in this case) evenly in their layout    
-    >>> layout.redistribute()
+The 'redistribute' method should now be used to redistributes the children (buttons in this case) evenly in their layout::    
+    
+    layout.redistribute()
 
 
-A formLayout will align its controls vertically by default. By using the 'verticalLayout' or 'horizontalLayout' commands
-you can explicitly override this (note that both commands still return a FormLayout object):
+A formLayout will align its controls vertically by default. By using the 'verticalLayout' or 'horizontalLayout' commands you can explicitly override this (note that both commands still return a FormLayout object)::
 
-    >>> win = window(title="My Window")
-    >>> layout = horizontalLayout()
-    >>> for i in range(5):
-    ...     button(label="button %s" % i)
-    >>> layout.redistribute()    # now will redistribute horizontally
-    >>> win.show()
-
-
-By default, the control are redistributed evenly but this can be overridden:
-
-    >>> layout.redistribute(1,3,2)    # (For 5 elements, the ratios will then be 1:3:2:1:1)
+    win = window(title="My Window")
+    layout = horizontalLayout()
+    for i in range(5):
+        button(label="button %s" % i)
+    layout.redistribute()    # now will redistribute horizontally
+    win.show()
 
 
-You can also specify the ratios at creation time, as well as the spacing between the controls:
-(A ratio of 0 (zero) means that the control will not be resized, and will keep a fixed size:)
+By default, the control are redistributed evenly but this can be overridden::
 
-    >>> win = window(title="My Window")
-    >>> layout = horizontalLayout(ratios=[1,0,2], spacing=10)
-    >>> for i in range(5):
-    ...     button(label="button %s" % i)
-    >>> layout.redistribute()    # now will redistribute horizontally
-    >>> win.show()
+    layout.redistribute(1,3,2)    # (For 5 elements, the ratios will then be 1:3:2:1:1)
+
+
+You can also specify the ratios at creation time, as well as the spacing between the controls. A ratio of 0 means that the control will not be resized, and will keep a fixed size::
+
+    win = window(title="My Window")
+    layout = horizontalLayout(ratios=[1,0,2], spacing=10)
+    for i in range(5):
+        button(label="button %s" % i)
+    layout.redistribute()    # now will redistribute horizontally
+    win.show()
     
 
 
-Finally, just for fun, you can also reset, flip and reverse the layout:
+Finally, just for fun, you can also reset, flip and reverse the layout::
 
-    >>> layout.flip()     # flip the orientation
-    >>> layout.reverse()  # reverse the order of the controls
-    >>> layout.reset()    # reset the ratios
+    layout.flip()     # flip the orientation
+    layout.reverse()  # reverse the order of the controls
+    layout.reset()    # reset the ratios
 
